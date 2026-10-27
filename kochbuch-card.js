@@ -205,6 +205,9 @@
   // Kleinstmengen kommen fast immer aus dem Vorrat
   const TINY = ['prise', 'prisen', 'msp.', 'spritzer', 'schuss', 'tropfen', 'el', 'tl'];
   const words = (s) => String(s || '').toLowerCase().split(/[\s,/()-]+/).filter(Boolean);
+  // Eingelesene Namen enthalten oft die Menge selbst: "Prise Zucker", "geh. TL Kurkuma"
+  const TINY_WORDS = TINY.concat(['msp', 'gestr.', 'geh.', 'gehäufter', 'gestrichener', 'etwas']);
+  const tinyOf = (it) => TINY.includes(String(it.unit || '').toLowerCase()) || words(it.name).some((x) => TINY_WORDS.includes(x));
   const matchName = (name, q) => { q = String(q || '').toLowerCase().trim(); const n = String(name || '').toLowerCase().trim(); return !!q && (n === q || words(n).includes(q)); };
   const inList = (name, list) => list.some((p) => matchName(name, p));
   // Übliche Packungen: Stichwort, Größe in g bzw. ml, Bezeichnung
@@ -222,9 +225,11 @@
   const buyText = (it, f) => {
     const a = it.amount == null || it.amount === '' ? null : (+(it.amount2 || it.amount)) * f;
     const n = String(it.name || '').toLowerCase(), u = it.unit || '', w = words(n);
+    if (tinyOf(it)) return '';
     if (a && (!u || COUNT[u] === 'Stück') && w.some((x) => ['ei', 'eier', 'eigelb', 'eiweiß'].includes(x))) { const k = Math.ceil(a); return k <= 6 ? '6er-Packung' : k <= 10 ? '10er-Packung' : `${Math.ceil(k / 10)} × 10er-Packung`; }
-    if (/^zehe/i.test(u)) return '1 Knolle';
-    if (/^(zweig|blatt|blätter)/i.test(u)) return '1 Bund';
+    if (/^zehe/i.test(u) || w.some((x) => /^(zehe|zehen|knoblauchzehen?)$/.test(x))) return '1 Knolle';
+    if (/^(zweig|blatt|blätter)/i.test(u) || w.some((x) => /^(bund|stängel|zweige?)$/.test(x))) return '1 Bund';
+    if (!u && w.some((x) => /^dosen?$|^dose$/.test(x))) return pl(Math.ceil(a || 1), 'Dose');
     if (!a) return '';
     if (BASE[u]) {
       const p = PACKS.find(([kw]) => hasWord(n, kw));
@@ -1100,7 +1105,7 @@ a.tag{text-decoration:none;color:var(--acc)}
       const pantry = this._pantry();
       this._bl = shopItems(r.ingredients).map((it) => {
         const has = have.includes(it.name.toLowerCase().trim());
-        const tiny = TINY.includes(String(it.unit || '').toLowerCase());
+        const tiny = tinyOf(it);
         const x = { name: it.name, buy: buyText(it, f), rec: fmtAmt(it, f), has, tiny, staple: inList(it.name, pantry) };
         x.on = !has && !x.staple && !tiny;
         return x;
