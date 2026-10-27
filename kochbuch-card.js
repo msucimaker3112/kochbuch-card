@@ -1,9 +1,9 @@
-/* kochbuch-card v0.5.1 – eigenes Kochbuch für Home Assistant: Rezepte schreiben und bebildern, Kochmodus mit Timern, Zutaten auf die Einkaufsliste,
+/* kochbuch-card v0.5.2 – eigenes Kochbuch für Home Assistant: Rezepte schreiben und bebildern, Kochmodus mit Timern, Zutaten auf die Einkaufsliste,
    Rezepte aus dem Internet einlesen (schema.org-Rezeptdaten der Seite).
    Rezepte liegen in einem eigenen Dashboard (store), Bilder im Bilderspeicher von Home Assistant (image_upload).
    Seitenabruf über rest_command.kochbuch_abruf, sonst über einen öffentlichen Abrufdienst. */
 (() => {
-  const VERSION = '0.5.1';
+  const VERSION = '0.5.2';
   // Öffentliche Abrufdienste, nur als Notlösung ohne rest_command (oft überlastet)
   const PROXIES = ['https://api.allorigins.win/raw?url=', 'https://api.codetabs.com/v1/proxy?quest='];
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1136,6 +1136,7 @@ a.tag{text-decoration:none;color:var(--acc)}
         <p class="hint" style="margin:0 0 10px">Adresse einer Rezeptseite einfügen, zum Beispiel von Chefkoch, Lecker oder einem Foodblog. Titel, Foto, Zutaten, Schritte und Zeiten werden übernommen. Vor dem Speichern kannst du alles prüfen.</p>
         <input class="in weburl" type="url" inputmode="url" placeholder="https://…" value="${esc(url || '')}"${busy ? ' disabled' : ''}>
         ${err ? `<p class="werr">${esc(err)}</p>` : ''}
+        <p class="hint" style="margin:10px 0 0">Eingelesene Rezepte, vor allem Fotos und ausformulierte Texte, sind urheberrechtlich geschützt. Nur für dein privates Kochbuch, bitte nicht veröffentlichen oder weitergeben.</p>
         ${this._viaHa() ? '' : '<p class="hint" style="margin:10px 0 0">Noch nicht eingerichtet: Ohne <code>rest_command.kochbuch_abruf</code> in Home Assistant wird die Seite über öffentliche Dienste abgerufen, und die sind oft überlastet.</p>'}
         </div><div class="df"><button class="btn ghost" data-act="mclose">Abbrechen</button>
         <button class="btn pri${busy ? ' spin' : ''}" data-act="webok"${busy ? ' disabled' : ''}><ha-icon icon="mdi:${busy ? 'loading' : 'download'}"></ha-icon>${busy ? 'Lese ein …' : 'Einlesen'}</button></div></div>`);

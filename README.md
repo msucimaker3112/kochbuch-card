@@ -57,7 +57,7 @@ HACS → ⋮ → *Benutzerdefinierte Repositories* → `https://github.com/msuci
 ### Manuell
 
 1. `kochbuch-card.js` nach `/config/www/kochbuch-card.js` kopieren (zum Beispiel mit der App *File editor* oder per Samba).
-2. Einstellungen → Dashboards → ⋮ → *Ressourcen* → *Ressource hinzufügen*: URL `/local/kochbuch-card.js?v=0.5.1`, Typ *JavaScript-Modul*.
+2. Einstellungen → Dashboards → ⋮ → *Ressourcen* → *Ressource hinzufügen*: URL `/local/kochbuch-card.js?v=0.5.2`, Typ *JavaScript-Modul*.
 3. Browser hart neu laden (Strg + Umschalt + R) bzw. in der Companion-App den Frontend-Cache zurücksetzen.
 
 Bei jedem Update die Zahl hinter `?v=` erhöhen, damit Browser und App die neue Datei laden.
@@ -113,6 +113,12 @@ Danach unter Entwicklerwerkzeuge → YAML die Konfiguration prüfen und *REST-Be
 Ohne diesen Dienst versucht die Karte öffentliche Abrufdienste (allorigins.win, codetabs.com). Die sind oft überlastet und bekommen die Adresse des Rezepts zu sehen, sie sind also nur eine Notlösung.
 
 Hinweis: Mit dem Dienst kann jedes Konto in Home Assistant eine beliebige Adresse über Home Assistant abrufen lassen.
+
+### Urheberrecht
+
+Eingelesene Rezepte, vor allem **Fotos** und ausformulierte Texte, sind urheberrechtlich geschützt. Zutatenlisten und das Gericht selbst sind es in der Regel nicht. Die Funktion ist für **dein privates Kochbuch** gedacht, vergleichbar mit Ausdrucken oder Abspeichern der Seite. Veröffentliche eingelesene Rezepte nicht und gib sie nicht weiter. Die Karte speichert die Quelle mit und verlinkt im Rezept auf das Original. Das Import-Fenster zeigt denselben Hinweis.
+
+Das ist keine Rechtsberatung.
 
 ## Sprachsteuerung mit Alexa
 

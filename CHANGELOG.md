@@ -1,5 +1,9 @@
 # Änderungen
 
+## 0.5.2 (2026-10-27)
+
+- Import-Fenster und README weisen darauf hin, dass eingelesene Rezepte (vor allem Fotos und Texte) urheberrechtlich geschützt und nur für das private Kochbuch gedacht sind.
+
 ## 0.5.1 (2026-10-27)
 
 - **Handy:** Kopfzeile der Startseite passt wieder in eine Zeile. Seit 0.5.0 rutschte der „+“-Knopf neben dem neuen Globus-Knopf in eine eigene Zeile. Die Knöpfe sind jetzt runde Symbolknöpfe, die Unterzeile wird bei Platzmangel gekürzt.
