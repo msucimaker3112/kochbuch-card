@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.6.0 (2026-10-27)
+
+- **Einkaufsliste, die mitdenkt:**
+  - Mengen werden in Packungen umgerechnet: „150 ml Sahne“ → „1 Becher“, „4 Eier“ → „6er-Packung“, „2 Zehen Knoblauch“ → „1 Knolle“. Lose Ware behält ihr Gewicht, unbekannte Zutaten kommen nur mit dem Namen auf die Liste.
+  - Vorrat und Kleinmengen (Prise, Messerspitze, Spritzer, EL, TL) sind nicht vorausgewählt und stehen in einem eigenen Bereich „Hast du vermutlich da“. Wasser wird nie übernommen.
+  - Mit dem Stern merkst du dir eine Zutat als „immer im Haus“. Gespeichert im Kochbuch (`kochbuch.pantry`), gilt für alle Geräte. Neue Kartenoption `pantry` für die Startliste.
+  - Gleiche Zutaten werden zusammengerechnet, Eier, Eigelb und Eiweiß werden zu einer Zeile.
+
 ## 0.5.2 (2026-10-27)
 
 - Import-Fenster und README weisen darauf hin, dass eingelesene Rezepte (vor allem Fotos und Texte) urheberrechtlich geschützt und nur für das private Kochbuch gedacht sind.

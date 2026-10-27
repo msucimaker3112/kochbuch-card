@@ -8,7 +8,7 @@
 - **Aus dem Internet:** Adresse einer Rezeptseite einfügen (Chefkoch, Lecker, Foodblogs …), die Karte füllt den Editor aus. Vor dem Speichern prüfst du alles.
 - **Kochmodus:** großer Text, Zutaten je Schritt, Timer mit Ring und Alarm, Temperatur, Wischen oder Pfeiltasten zum Blättern. Der Bildschirm bleibt an.
 - **Portionen umrechnen:** Mengen passen sich an, aus „1000 g“ wird „1 kg“.
-- **Einkaufsliste:** fehlende Zutaten mit Menge auf eine `todo`-Liste setzen (zum Beispiel Bring! oder die Einkaufsliste von Home Assistant). Was schon draufsteht, wird erkannt.
+- **Einkaufsliste, die mitdenkt:** Zutaten auf eine `todo`-Liste setzen (zum Beispiel Bring! oder die Einkaufsliste von Home Assistant), umgerechnet in Packungen („150 ml Sahne“ → „1 Becher“). Was du meistens im Haus hast, und Kleinmengen wie „3 Prisen Pfeffer“ sind nicht vorausgewählt. Was schon draufsteht, wird erkannt.
 - **Freie Timer** für Eier, Nudeln, Reis oder eigene Zeiten, auf Wunsch mit Ansage über einen Lautsprecher.
 - **Vorlesen und Sprachsteuerung:** Schritte vorlesen lassen, „Alexa, nächster Schritt“ über Routinen.
 
@@ -24,7 +24,7 @@ Rezepte liegen in einem eigenen Dashboard von Home Assistant, Fotos im Bilderspe
 
 ![Kochmodus mit laufendem Timer und Zutaten für den Schritt](docs/img/kochmodus.jpg)
 
-**Einkaufsliste:** Die Zutaten gehen mit Menge auf deine `todo`-Liste. Was schon draufsteht, ist abgewählt.
+**Einkaufsliste:** Oben steht, was du kaufen musst, gleich in Packungen umgerechnet. Unten steht, was du vermutlich da hast. Was schon auf der Liste steht, ist abgewählt. Mehr dazu unter [Einkaufsliste](#einkaufsliste).
 
 ![Zutaten auf die Einkaufsliste übernehmen](docs/img/einkaufsliste.jpg)
 
@@ -57,7 +57,7 @@ HACS → ⋮ → *Benutzerdefinierte Repositories* → `https://github.com/msuci
 ### Manuell
 
 1. `kochbuch-card.js` nach `/config/www/kochbuch-card.js` kopieren (zum Beispiel mit der App *File editor* oder per Samba).
-2. Einstellungen → Dashboards → ⋮ → *Ressourcen* → *Ressource hinzufügen*: URL `/local/kochbuch-card.js?v=0.5.2`, Typ *JavaScript-Modul*.
+2. Einstellungen → Dashboards → ⋮ → *Ressourcen* → *Ressource hinzufügen*: URL `/local/kochbuch-card.js?v=0.6.0`, Typ *JavaScript-Modul*.
 3. Browser hart neu laden (Strg + Umschalt + R) bzw. in der Companion-App den Frontend-Cache zurücksetzen.
 
 Bei jedem Update die Zahl hinter `?v=` erhöhen, damit Browser und App die neue Datei laden.
@@ -87,8 +87,28 @@ views:
 | `announce` | – | Dienst für Timer-Ansagen, zum Beispiel `notify.alexa_media_kueche` |
 | `speak` | Wert von `announce` | Dienst für das Vorlesen der Schritte |
 | `voice` | siehe unten | Schalter oder Knöpfe für die Sprachsteuerung |
+| `pantry` | Salz, Pfeffer, Zucker, Öl, Olivenöl, Mehl, Essig | Startliste für „hab ich meistens im Haus“. Sobald du im Einkaufsdialog einen Stern setzt, gilt die im Kochbuch gespeicherte Liste. |
 
 **Speichern geht nur mit einem Administrator-Konto**, weil die Rezepte in einer Dashboard-Konfiguration liegen. Lesen und Kochen geht mit jedem Konto.
+
+## Einkaufsliste
+
+Ein Rezept sagt, wie viel du verbrauchst. Die Einkaufsliste braucht, was du kaufen musst. „Auf die Einkaufsliste“ rechnet deshalb um:
+
+| Im Rezept | Auf der Liste |
+|---|---|
+| 150 ml Sahne | Sahne · 1 Becher |
+| 300 g + 100 g Butter | Butter · 2 Stück |
+| 4 Eier, 3 Eigelb | Eier · 10er-Packung |
+| 2 Zehen Knoblauch | Knoblauch · 1 Knolle |
+| 400 g Karotten | Karotten · 400 g (lose Ware) |
+| 3 Prisen Pfeffer, 2 EL Olivenöl | nicht vorausgewählt („hast du vermutlich da“) |
+| 500 ml Wasser | gar nicht |
+
+- **Vorrat:** Zutaten aus deiner Vorratsliste und Kleinmengen (Prise, Messerspitze, Spritzer, EL, TL) stehen unten unter „Hast du vermutlich da“ und sind abgewählt. Brauchst du doch etwas, tippst du es an.
+- **Stern:** Mit ☆ merkst du dir eine Zutat als „immer im Haus“, mit ★ nimmst du sie wieder heraus. Die Liste wird im Kochbuch gespeichert und gilt auf allen Geräten.
+- **Packungen:** Für die häufigsten Zutaten kennt die Karte die üblichen Packungsgrößen (Butter 250 g, Sahne 200 ml, Milch 1 l, Mozzarella 125 g, Hack 500 g, Nudeln 500 g …). Andere Zutaten kommen mit der Rezeptmenge oder nur mit dem Namen auf die Liste.
+- Gleiche Zutaten werden zusammengerechnet. Eier, Eigelb und Eiweiß werden zu einer Zeile, getrennte Eier zählen dabei nicht doppelt.
 
 ## Rezepte aus dem Internet
 
@@ -145,6 +165,7 @@ Vorgelesen wird über `speak` (sonst `announce`) mit `data: {type: tts}`, passen
 
 - **Rezepte:** im Dashboard `store` unter dem Schlüssel `kochbuch` der Konfiguration. Mehrere Geräte arbeiten auf demselben Stand, jede Änderung liest vorher neu.
 - **Fotos:** im Bilderspeicher von Home Assistant (`/api/image`), beim Hochladen auf höchstens 1600 px verkleinert. Ersetzte oder gelöschte Fotos werden mit entfernt.
+- **Vorratsliste:** ebenfalls im Dashboard `store`, unter `kochbuch.pantry`.
 - **Gerätebezogen** (nur im Browser): zuletzt gewählte Kategorie und ob Schritte automatisch vorgelesen werden.
 
 ## Bildnachweise

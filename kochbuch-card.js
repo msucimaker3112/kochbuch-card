@@ -1,9 +1,9 @@
-/* kochbuch-card v0.5.2 – eigenes Kochbuch für Home Assistant: Rezepte schreiben und bebildern, Kochmodus mit Timern, Zutaten auf die Einkaufsliste,
+/* kochbuch-card v0.6.0 – eigenes Kochbuch für Home Assistant: Rezepte schreiben und bebildern, Kochmodus mit Timern, Zutaten auf die Einkaufsliste,
    Rezepte aus dem Internet einlesen (schema.org-Rezeptdaten der Seite).
    Rezepte liegen in einem eigenen Dashboard (store), Bilder im Bilderspeicher von Home Assistant (image_upload).
    Seitenabruf über rest_command.kochbuch_abruf, sonst über einen öffentlichen Abrufdienst. */
 (() => {
-  const VERSION = '0.5.2';
+  const VERSION = '0.6.0';
   // Öffentliche Abrufdienste, nur als Notlösung ohne rest_command (oft überlastet)
   const PROXIES = ['https://api.allorigins.win/raw?url=', 'https://api.codetabs.com/v1/proxy?quest='];
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -198,6 +198,64 @@
     return { r, img: img ? abs(img) : '', found: !!n };
   };
 
+  // ---------- Einkaufen: Vorrat und Packungsgrößen ----------
+  // Grundliste für "hab ich meistens im Haus"; im Kochbuch per Stern änderbar (kb.pantry)
+  const PANTRY = ['Salz', 'Pfeffer', 'Zucker', 'Öl', 'Olivenöl', 'Mehl', 'Essig'];
+  const NEVER = ['wasser', 'leitungswasser', 'eiswasser'];
+  // Kleinstmengen kommen fast immer aus dem Vorrat
+  const TINY = ['prise', 'prisen', 'msp.', 'spritzer', 'schuss', 'tropfen', 'el', 'tl'];
+  const words = (s) => String(s || '').toLowerCase().split(/[\s,/()-]+/).filter(Boolean);
+  const matchName = (name, q) => { q = String(q || '').toLowerCase().trim(); const n = String(name || '').toLowerCase().trim(); return !!q && (n === q || words(n).includes(q)); };
+  const inList = (name, list) => list.some((p) => matchName(name, p));
+  // Übliche Packungen: Stichwort, Größe in g bzw. ml, Bezeichnung
+  const PACKS = [['butter', 250, 'Stück'], ['schlagsahne', 200, 'Becher'], ['saure sahne', 200, 'Becher'], ['sahne', 200, 'Becher'], ['schmand', 200, 'Becher'], ['crème fraîche', 200, 'Becher'],
+    ['creme fraiche', 200, 'Becher'], ['joghurt', 500, 'Becher'], ['quark', 500, 'Packung'], ['mascarpone', 250, 'Packung'], ['frischkäse', 200, 'Packung'], ['mozzarella', 125, 'Packung'],
+    ['feta', 200, 'Packung'], ['milch', 1000, 'Liter'], ['kokosmilch', 400, 'Dose'], ['hackfleisch', 500, 'Packung'], ['hack', 500, 'Packung'], ['speckwürfel', 125, 'Packung'],
+    ['spaghetti', 500, 'Packung'], ['nudeln', 500, 'Packung'], ['penne', 500, 'Packung'], ['lasagneplatten', 250, 'Packung'], ['reis', 1000, 'Packung'], ['mehl', 1000, 'Packung'],
+    ['zucker', 1000, 'Packung'], ['passierte tomaten', 500, 'Packung'], ['stückige tomaten', 400, 'Dose'], ['gehackte tomaten', 400, 'Dose']].sort((a, b) => b[0].length - a[0].length);
+  const BASE = { g: 1, kg: 1000, ml: 1, l: 1000, cl: 10, dl: 100 };
+  const COUNT = { Dose: 'Dose', Dosen: 'Dose', Becher: 'Becher', 'Pck.': 'Packung', 'Päckchen': 'Packung', Glas: 'Glas', 'Gläser': 'Glas', Bund: 'Bund', Beutel: 'Beutel', 'Tüte': 'Tüte', Stange: 'Stange', Stangen: 'Stange', Kopf: 'Kopf', 'Stück': 'Stück', 'Stk.': 'Stück' };
+  const PLURAL = { Packung: 'Packungen', Dose: 'Dosen', Glas: 'Gläser', 'Tüte': 'Tüten', Stange: 'Stangen', Kopf: 'Köpfe' };
+  const pl = (k, w) => `${k} ${k === 1 ? w : PLURAL[w] || w}`;
+  const hasWord = (n, kw) => new RegExp('(^|[^a-zäöüß])' + kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^a-zäöüß])').test(n);
+  // Was man im Laden kauft: "150 ml Sahne" -> "1 Becher", "4 Eier" -> "6er-Packung", sonst Rezeptmenge oder nur der Name
+  const buyText = (it, f) => {
+    const a = it.amount == null || it.amount === '' ? null : (+(it.amount2 || it.amount)) * f;
+    const n = String(it.name || '').toLowerCase(), u = it.unit || '', w = words(n);
+    if (a && (!u || COUNT[u] === 'Stück') && w.some((x) => ['ei', 'eier', 'eigelb', 'eiweiß'].includes(x))) { const k = Math.ceil(a); return k <= 6 ? '6er-Packung' : k <= 10 ? '10er-Packung' : `${Math.ceil(k / 10)} × 10er-Packung`; }
+    if (/^zehe/i.test(u)) return '1 Knolle';
+    if (/^(zweig|blatt|blätter)/i.test(u)) return '1 Bund';
+    if (!a) return '';
+    if (BASE[u]) {
+      const p = PACKS.find(([kw]) => hasWord(n, kw));
+      return p ? pl(Math.ceil((a * BASE[u]) / p[1]), p[2]) : fmtAmt(it, f);
+    }
+    if (COUNT[u]) return pl(Math.ceil(a), COUNT[u]);
+    if (!u) return `${Math.ceil(a)} Stück`;
+    return '';
+  };
+
+  // Für den Einkauf zusammenfassen: gleiche Zutat mit gleicher Einheit addieren,
+  // Eier + Eigelb/Eiweiß zu einer Zeile (getrennte Eier nicht doppelt zählen)
+  const shopItems = (ings) => {
+    const out = [];
+    ings.filter((it) => !it.group && it.name && !inList(it.name, NEVER)).forEach((it) => {
+      const m = out.find((y) => y.name.toLowerCase().trim() === it.name.toLowerCase().trim() && (y.unit || '') === (it.unit || ''));
+      if (!m) out.push(Object.assign({}, it));
+      else if (m.amount != null && it.amount != null) { m.amount = +m.amount + +it.amount; m.amount2 = null; }
+    });
+    const egg = (it, kinds) => (!it.unit || COUNT[it.unit] === 'Stück') && it.amount != null && words(it.name).some((x) => kinds.includes(x));
+    const whole = out.filter((it) => egg(it, ['ei', 'eier'])), part = out.filter((it) => egg(it, ['eigelb', 'eiweiß']));
+    if (whole.length + part.length > 1) {
+      const n = whole.reduce((s, it) => s + +it.amount, 0) + Math.max(0, ...part.map((it) => +it.amount));
+      const at = out.indexOf(whole[0] || part[0]);
+      const keep = out.filter((it) => !whole.includes(it) && !part.includes(it));
+      keep.splice(Math.min(at, keep.length), 0, { amount: n, amount2: null, unit: '', name: 'Eier', note: '' });
+      return keep;
+    }
+    return out;
+  };
+
   // Zutaten eines Schritts: festgelegt (step.ing) oder automatisch über den Namen im Text
   const stepIngs = (r, st) => {
     if (Array.isArray(st.ing)) return st.ing.filter((i) => r.ingredients[i] && !r.ingredients[i].group);
@@ -214,7 +272,9 @@
 
   const norm = (kb) => {
     const d = kb && typeof kb === 'object' ? kb : {};
-    return { v: 1, recipes: Array.isArray(d.recipes) ? d.recipes : [] };
+    const out = { v: 1, recipes: Array.isArray(d.recipes) ? d.recipes : [] };
+    if (Array.isArray(d.pantry)) out.pantry = d.pantry;
+    return out;
   };
   const blank = () => ({ id: uid(), title: '', desc: '', cat: '', tags: [], portions: 4, prep: null, cook: null, rest: null, diff: 1, fav: false, image: null,
     ingredients: [{ amount: null, amount2: null, unit: '', name: '', note: '' }], steps: [{ text: '' }], notes: '', created: Date.now(), cooked: 0, last: null });
@@ -415,8 +475,13 @@ select.in{appearance:none}
 .blist{list-style:none;margin:0;padding:0}
 .blist li{display:flex;gap:12px;align-items:center;padding:10px 2px;border-bottom:1px solid var(--line);cursor:pointer}
 .blist li.has{opacity:.5}
-.blist .amt{min-width:70px;font-size:.88rem}
-.blist em{margin-left:auto;font-style:normal;font-size:.72rem;color:var(--mut)}
+.blist .bnm{flex:1;min-width:0}
+.blist .bnm small{display:block;color:var(--mut);font-size:.74rem;margin-top:1px}
+.blist .buy{font-weight:700;font-size:.85rem;color:var(--acc);white-space:nowrap}
+.blist em{font-style:normal;font-size:.72rem;color:var(--mut);white-space:nowrap}
+.blist li.sep{cursor:default;border:0;padding:16px 2px 4px;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:700;gap:6px}
+.pst{width:36px;height:36px;margin:-6px -4px -6px 0;border-radius:50%;color:#b6c4d8;--mdc-icon-size:20px;flex:none;display:inline-flex;align-items:center;justify-content:center}
+.pst.on{color:#f5a524}
 .toast{position:absolute;left:50%;bottom:26px;transform:translate(-50%,20px);opacity:0;z-index:30;background:var(--txt);color:var(--bg);padding:12px 20px;border-radius:999px;font-weight:600;font-size:.9rem;transition:all .3s;pointer-events:none;max-width:90%;text-align:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .toast.err{background:var(--bad);color:#fff}
@@ -1032,15 +1097,44 @@ a.tag{text-decoration:none;color:var(--acc)}
         const items = (res && res.response && res.response[ent] && res.response[ent].items) || [];
         have = items.map((x) => String(x.summary || '').toLowerCase().trim());
       } catch (e) { /* Liste nicht lesbar: alles anbieten */ }
-      this._bl = r.ingredients.map((it, i) => ({ i, it })).filter((x) => !x.it.group && x.it.name).map((x) => {
-        const has = have.includes(x.it.name.toLowerCase().trim());
-        return { i: x.i, name: x.it.name, amt: fmtAmt(x.it, f), has, on: !has };
+      const pantry = this._pantry();
+      this._bl = shopItems(r.ingredients).map((it) => {
+        const has = have.includes(it.name.toLowerCase().trim());
+        const tiny = TINY.includes(String(it.unit || '').toLowerCase());
+        const x = { name: it.name, buy: buyText(it, f), rec: fmtAmt(it, f), has, tiny, staple: inList(it.name, pantry) };
+        x.on = !has && !x.staple && !tiny;
+        return x;
       });
-      const st = this._hass.states[ent];
+      this._bringDlg();
+    }
+    // Vorrat: im Kochbuch gespeichert (alle Geräte), sonst Kartenoption pantry, sonst Grundliste
+    _pantry() { return Array.isArray(this._data.pantry) ? this._data.pantry : Array.isArray(this._c.pantry) ? this._c.pantry : PANTRY; }
+    // Einkaufen oben, "hast du vermutlich da" unten; Stern = immer im Haus
+    _bringDlg() {
+      const ent = this._c.shopping_list, st = this._hass.states[ent];
+      const row = (x, k) => `<li class="${x.on ? 'on' : ''}${x.has ? ' has' : ''}" data-act="bt" data-k="${k}"><span class="box"><ha-icon icon="mdi:check"></ha-icon></span>
+        <span class="bnm">${esc(x.name)}${x.rec && x.buy && x.rec !== x.buy ? `<small>Rezept: ${esc(x.rec)}</small>` : ''}</span>
+        ${x.has ? '<em>steht schon drauf</em>' : x.buy ? `<span class="buy">${esc(x.buy)}</span>` : ''}
+        <button class="pst${x.staple ? ' on' : ''}" data-act="pstar" data-k="${k}" aria-label="Immer im Haus" title="${x.staple ? 'Nicht mehr als Vorrat merken' : 'Hab ich immer im Haus'}"><ha-icon icon="mdi:star${x.staple ? '' : '-outline'}"></ha-icon></button></li>`;
+      const idx = this._bl.map((x, k) => k), main = idx.filter((k) => !this._bl[k].staple && !this._bl[k].tiny), rest = idx.filter((k) => this._bl[k].staple || this._bl[k].tiny);
       this._modal(`<div class="dlg"><h3>Auf die Einkaufsliste</h3>
         <div class="db"><p class="mut" style="margin:0 0 10px">${esc(st ? st.attributes.friendly_name || ent : ent)} · für ${this._por} ${this._por === 1 ? 'Portion' : 'Portionen'}</p>
-        <ul class="blist">${this._bl.map((x, k) => `<li class="${x.on ? 'on' : ''}${x.has ? ' has' : ''}" data-act="bt" data-k="${k}"><span class="box"><ha-icon icon="mdi:check"></ha-icon></span><span class="amt">${esc(x.amt)}</span><span>${esc(x.name)}</span>${x.has ? '<em>steht schon drauf</em>' : ''}</li>`).join('')}</ul></div>
+        <ul class="blist">${main.map((k) => row(this._bl[k], k)).join('')}
+        ${rest.length ? `<li class="sep">Hast du vermutlich da · <ha-icon icon="mdi:star" style="--mdc-icon-size:14px;color:#f5a524"></ha-icon> = immer im Haus</li>${rest.map((k) => row(this._bl[k], k)).join('')}` : ''}</ul></div>
         <div class="df"><button class="btn ghost" data-act="mclose">Abbrechen</button><button class="btn pri" data-act="bsend"><ha-icon icon="mdi:cart-plus"></ha-icon><span class="bn">${this._bl.filter((x) => x.on).length}</span>&nbsp;übernehmen</button></div></div>`);
+    }
+    // Stern: Zutat als Vorrat merken oder vergessen, gespeichert im Kochbuch
+    _pantryToggle(k) {
+      const x = this._bl[k];
+      const cur = this._pantry().slice();
+      const next = x.staple ? cur.filter((p) => !matchName(x.name, p)) : cur.concat(String(x.name).trim());
+      this._bl.filter((y) => matchName(y.name, x.name) || inList(y.name, next) !== y.staple).forEach((y) => {
+        y.staple = inList(y.name, next);
+        y.on = !y.has && !y.staple && !y.tiny;
+      });
+      this._data.pantry = next;
+      this._bringDlg();
+      this._mutate((kb) => { kb.pantry = next; }, x.staple ? `${x.name} als Vorrat gemerkt` : `${x.name} kommt wieder auf die Liste`);
     }
     async _bringSend() {
       const sel = (this._bl || []).filter((x) => x.on);
@@ -1049,10 +1143,10 @@ a.tag{text-decoration:none;color:var(--acc)}
       for (const x of sel) {
         const tgt = { entity_id: this._c.shopping_list };
         try {
-          await this._hass.callService('todo', 'add_item', x.amt ? { item: x.name, description: x.amt } : { item: x.name }, tgt); ok++;
+          await this._hass.callService('todo', 'add_item', x.buy ? { item: x.name, description: x.buy } : { item: x.name }, tgt); ok++;
         } catch (e) {
           // Liste ohne Beschreibungsfeld: Menge in den Namen schreiben
-          try { await this._hass.callService('todo', 'add_item', { item: x.amt ? `${x.name} (${x.amt})` : x.name }, tgt); ok++; } catch (e2) { /* weiter */ }
+          try { await this._hass.callService('todo', 'add_item', { item: x.buy ? `${x.name} (${x.buy})` : x.name }, tgt); ok++; } catch (e2) { /* weiter */ }
         }
       }
       this._modal(null);
@@ -1249,6 +1343,7 @@ a.tag{text-decoration:none;color:var(--acc)}
           break;
         }
         case 'bt': { const x = this._bl[+el.dataset.k]; x.on = !x.on; el.classList.toggle('on', x.on); const bn = this._$('.bn'); if (bn) bn.textContent = this._bl.filter((y) => y.on).length; break; }
+        case 'pstar': e.stopPropagation(); this._pantryToggle(+el.dataset.k); break;
         case 'bsend': this._bringSend(); break;
         case 'mclose': this._modal(null); break;
         case 'cfok': { const fn = this._cfn; this._cfn = null; this._modal(null); if (fn) fn(); break; }
