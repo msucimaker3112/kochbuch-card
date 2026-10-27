@@ -2,6 +2,8 @@
 
 **Ein eigenes Kochbuch für Home Assistant.** Rezepte schreiben und bebildern, aus dem Internet einlesen, mit dem Kochmodus Schritt für Schritt nachkochen und Zutaten auf die Einkaufsliste setzen. Komplett deutsch, gemacht für das Küchen-Tablet.
 
+[![In HACS öffnen](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=msucimaker3112&repository=kochbuch-card&category=plugin)
+
 ![Kochbuch: Startseite mit Rezepten, Suche und Kategorien](docs/img/start.jpg)
 
 - **Rezepte** mit Foto, Kategorie, Stichwörtern, Schwierigkeit, Zeiten, Notizen und Favoriten. Suche über Titel, Zutaten und Stichwörter.
@@ -46,13 +48,21 @@ Rezepte liegen in einem eigenen Dashboard von Home Assistant, Fotos im Bilderspe
 
 *Die Screenshots zeigen Beispielrezepte, Bildnachweise [unten](#bildnachweise).*
 
+## English
+
+**A recipe book card for Home Assistant**, made for the kitchen tablet: recipes with photos, **import from any recipe website** (schema.org data, fetched through a `rest_command`), a **cooking mode** with step timers, swipe navigation and read-aloud via Alexa, **portion scaling**, and a **smart shopping list** for any `todo` entity (Bring!, HA shopping list) that converts amounts into packs and skips pantry items like salt or a pinch of pepper. Recipes are stored in a Home Assistant dashboard and photos in HA's image storage, so they are part of every backup. No add-on or database needed.
+
+**Install:** HACS → ⋮ → *Custom repositories* → `https://github.com/msucimaker3112/kochbuch-card`, category *Dashboard* → download → reload the browser. Then add `type: custom:kochbuch-card` to a panel view (see [Einrichtung](#einrichtung) for the options).
+
+The user interface is **German only** for now. Issues and pull requests in English are welcome.
+
 ## Installation
 
 ### Über HACS (benutzerdefiniertes Repository)
 
-HACS → ⋮ → *Benutzerdefinierte Repositories* → `https://github.com/msucimaker3112/kochbuch-card`, Kategorie *Dashboard* → herunterladen → Browser neu laden.
+Am einfachsten über das Abzeichen oben („In HACS öffnen“). Oder von Hand: HACS → ⋮ → *Benutzerdefinierte Repositories* → `https://github.com/msucimaker3112/kochbuch-card`, Kategorie *Dashboard* → herunterladen → Browser neu laden.
 
-> Solange das Repository privat ist, geht das nicht. Dann den manuellen Weg nehmen.
+HACS trägt die Karte selbst als Dashboard-Ressource ein und meldet Updates.
 
 ### Manuell
 
