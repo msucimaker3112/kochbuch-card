@@ -2,6 +2,8 @@
 
 **Ein eigenes Kochbuch für Home Assistant.** Rezepte schreiben und bebildern, aus dem Internet einlesen, mit dem Kochmodus Schritt für Schritt nachkochen und Zutaten auf die Einkaufsliste setzen. Komplett deutsch, gemacht für das Küchen-Tablet.
 
+![Kochbuch: Startseite mit Rezepten, Suche und Kategorien](docs/img/start.jpg)
+
 - **Rezepte** mit Foto, Kategorie, Stichwörtern, Schwierigkeit, Zeiten, Notizen und Favoriten. Suche über Titel, Zutaten und Stichwörter.
 - **Aus dem Internet:** Adresse einer Rezeptseite einfügen (Chefkoch, Lecker, Foodblogs …), die Karte füllt den Editor aus. Vor dem Speichern prüfst du alles.
 - **Kochmodus:** großer Text, Zutaten je Schritt, Timer mit Ring und Alarm, Temperatur, Wischen oder Pfeiltasten zum Blättern. Der Bildschirm bleibt an.
@@ -11,6 +13,38 @@
 - **Vorlesen und Sprachsteuerung:** Schritte vorlesen lassen, „Alexa, nächster Schritt“ über Routinen.
 
 Rezepte liegen in einem eigenen Dashboard von Home Assistant, Fotos im Bilderspeicher von Home Assistant. Sie sind damit in jedem normalen Backup enthalten. Eine Datenbank oder ein Add-on brauchst du nicht.
+
+## So sieht es aus
+
+**Rezept:** Zeiten und Schwierigkeit auf einen Blick, Zutaten zum Abhaken, Portionen mit − und + umrechnen. Schritte mit Timer zeigen die Dauer gleich mit.
+
+![Rezeptansicht mit Zutaten, Portionen und Zubereitung](docs/img/rezept.jpg)
+
+**Kochmodus:** ein Schritt pro Seite in großer Schrift, rechts die Zutaten für genau diesen Schritt und der Timer. Antippen startet ihn, läuft er ab, klingelt die Karte und sagt es auf Wunsch über Alexa an. Weiter geht es per Knopf, Wischen, Pfeiltaste oder „Alexa, nächster Schritt“.
+
+![Kochmodus mit laufendem Timer und Zutaten für den Schritt](docs/img/kochmodus.jpg)
+
+**Einkaufsliste:** Die Zutaten gehen mit Menge auf deine `todo`-Liste. Was schon draufsteht, ist abgewählt.
+
+![Zutaten auf die Einkaufsliste übernehmen](docs/img/einkaufsliste.jpg)
+
+**Rezept aus dem Internet:** Adresse einfügen, „Einlesen“ antippen …
+
+![Fenster „Rezept aus dem Internet“ mit eingefügter Adresse](docs/img/import-dialog.jpg)
+
+… und der Editor ist ausgefüllt: Foto, Titel, Beschreibung, Zutaten mit Menge, Einheit und Hinweis, darunter die Schritte. Prüfen, speichern, fertig.
+
+![Vom Import ausgefüllter Editor](docs/img/import-editor.jpg)
+
+**Auf dem Handy** ordnet sich alles untereinander an:
+
+<p>
+  <img src="docs/img/handy-start.jpg" alt="Startseite auf dem Handy" width="300">
+  &nbsp;
+  <img src="docs/img/handy-rezept.jpg" alt="Rezept auf dem Handy" width="300">
+</p>
+
+*Die Screenshots zeigen Beispielrezepte, Bildnachweise [unten](#bildnachweise).*
 
 ## Installation
 
@@ -23,7 +57,7 @@ HACS → ⋮ → *Benutzerdefinierte Repositories* → `https://github.com/msuci
 ### Manuell
 
 1. `kochbuch-card.js` nach `/config/www/kochbuch-card.js` kopieren (zum Beispiel mit der App *File editor* oder per Samba).
-2. Einstellungen → Dashboards → ⋮ → *Ressourcen* → *Ressource hinzufügen*: URL `/local/kochbuch-card.js?v=0.5.0`, Typ *JavaScript-Modul*.
+2. Einstellungen → Dashboards → ⋮ → *Ressourcen* → *Ressource hinzufügen*: URL `/local/kochbuch-card.js?v=0.5.1`, Typ *JavaScript-Modul*.
 3. Browser hart neu laden (Strg + Umschalt + R) bzw. in der Companion-App den Frontend-Cache zurücksetzen.
 
 Bei jedem Update die Zahl hinter `?v=` erhöhen, damit Browser und App die neue Datei laden.
@@ -106,6 +140,21 @@ Vorgelesen wird über `speak` (sonst `announce`) mit `data: {type: tts}`, passen
 - **Rezepte:** im Dashboard `store` unter dem Schlüssel `kochbuch` der Konfiguration. Mehrere Geräte arbeiten auf demselben Stand, jede Änderung liest vorher neu.
 - **Fotos:** im Bilderspeicher von Home Assistant (`/api/image`), beim Hochladen auf höchstens 1600 px verkleinert. Ersetzte oder gelöschte Fotos werden mit entfernt.
 - **Gerätebezogen** (nur im Browser): zuletzt gewählte Kategorie und ob Schritte automatisch vorgelesen werden.
+
+## Bildnachweise
+
+Die Gerichtsfotos in den Screenshots stammen von Wikimedia Commons und sind gemeinfrei (CC0 oder Public Domain):
+
+| Gericht | Foto | Urheber |
+|---|---|---|
+| Kaiserschmarrn | [Kaiserschmarrn, Munich.jpg](https://commons.wikimedia.org/wiki/File:Kaiserschmarrn,_Munich.jpg) | Gerda Arendt, CC0 |
+| Lasagne | [Halal Beef Lasagne and Cauliflowers – Foodilic 2024-08-12.jpg](https://commons.wikimedia.org/wiki/File:Halal_Beef_Lasagne_and_Cauliflowers_-_Foodilic_2024-08-12.jpg) | Andy Li, CC0 |
+| Spaghetti Carbonara | [Spaghetti alla Carbonara.jpg](https://commons.wikimedia.org/wiki/File:Spaghetti_alla_Carbonara.jpg) | Mattes Boch, Public Domain |
+| Shakshuka | [Shakshuka (Unsplash).jpg](https://commons.wikimedia.org/wiki/File:Shakshuka_(Unsplash).jpg) | Jarosław Ceborski, CC0 |
+| Flammkuchen | [Elsässer Flammkuchen in Strasbourg 2.JPG](https://commons.wikimedia.org/wiki/File:Els%C3%A4sser_Flammkuchen_in_Strasbourg_2.JPG) | Brücke-Osteuropa, CC0 |
+| Wiener Schnitzel | [Wiener Schnitzel mit Preiselbeeren 3.jpg](https://commons.wikimedia.org/wiki/File:Wiener_Schnitzel_mit_Preiselbeeren_3.jpg) | Brücke-Osteuropa, CC0 |
+
+Die Adresse `beispiel-rezepte.de` in den Screenshots ist ein Platzhalter.
 
 ## Lizenz
 

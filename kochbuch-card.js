@@ -1,9 +1,9 @@
-/* kochbuch-card v0.5.0 – eigenes Kochbuch für Home Assistant: Rezepte schreiben und bebildern, Kochmodus mit Timern, Zutaten auf die Einkaufsliste,
+/* kochbuch-card v0.5.1 – eigenes Kochbuch für Home Assistant: Rezepte schreiben und bebildern, Kochmodus mit Timern, Zutaten auf die Einkaufsliste,
    Rezepte aus dem Internet einlesen (schema.org-Rezeptdaten der Seite).
    Rezepte liegen in einem eigenen Dashboard (store), Bilder im Bilderspeicher von Home Assistant (image_upload).
    Seitenabruf über rest_command.kochbuch_abruf, sonst über einen öffentlichen Abrufdienst. */
 (() => {
-  const VERSION = '0.5.0';
+  const VERSION = '0.5.1';
   // Öffentliche Abrufdienste, nur als Notlösung ohne rest_command (oft überlastet)
   const PROXIES = ['https://api.allorigins.win/raw?url=', 'https://api.codetabs.com/v1/proxy?quest='];
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -447,6 +447,11 @@ a.tag{text-decoration:none;color:var(--acc)}
 .narrow .logo{width:44px;height:44px}
 .narrow .search{order:3;flex:1 1 100%}
 .narrow .top .btn span{display:none}
+.narrow .top{gap:8px}
+.narrow .brand{flex:1 1 auto;min-width:0;gap:10px}
+.narrow .brand>div:last-child{min-width:0}
+.narrow .brand .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.narrow .top .btn{width:44px;height:44px;padding:0;justify-content:center;flex:none}
 .narrow .chips{padding:2px 16px 12px}
 .narrow .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:4px 16px 20px}
 .narrow .rc h3{font-size:.98rem}

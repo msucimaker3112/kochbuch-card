@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.5.1 (2026-10-27)
+
+- **Handy:** Kopfzeile der Startseite passt wieder in eine Zeile. Seit 0.5.0 rutschte der „+“-Knopf neben dem neuen Globus-Knopf in eine eigene Zeile. Die Knöpfe sind jetzt runde Symbolknöpfe, die Unterzeile wird bei Platzmangel gekürzt.
+- README mit Screenshots.
+
 ## 0.5.0 (2026-10-27)
 
 - **Rezept aus dem Internet:** neuer Knopf „Aus dem Internet“ auf der Startseite. Adresse einfügen, die Karte liest die schema.org-Rezeptdaten der Seite (JSON-LD oder Mikrodaten) und öffnet den Editor vorausgefüllt: Titel, Beschreibung, Foto, Portionen, Zeiten, Kategorie, Stichwörter, Zutaten und Schritte. Timer und Temperaturen in den Schritten werden erkannt.
